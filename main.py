@@ -29,12 +29,12 @@ def mode_finder():
     lng = conf.get("longitude")
             
     if not lat or not lng:
-        print("[!] Coordonnées introuvables. Lancement du mode Set Address...")
+        print("Coordonnées introuvables. Lancement du mode Set Address...")
         lat, lng = mode_set_address()
         if not lat:
             return
             
-    print(f"[+] Loaded coordinates: {lat}, {lng}")
+    print(f"Loaded coordinates: {lat}, {lng}")
     server_thread = threading.Thread(target=server.start_dashboard, args=(lat, lng), daemon=True)
     server_thread.start()
     
@@ -84,26 +84,26 @@ def mode_set_address():
         config["address"] = f"{a}, {b}"
         save_config(config)
             
-        print(f"[✓] Localisation {lat}, {lng} sauvegardée avec succès !")
+        print(f"Localisation {lat}, {lng} sauvegardée avec succès !")
         return lat, lng
     except Exception as e:
-        print(f"[-] Erreur de recherche: {e}")
+        print(f"Erreur de recherche: {e}")
         return None, None
 
 def mode_set_webhook():
-    print("\n--- Configurer Discord Webhook ---")
+    print("\nConfigurer Discord Webhook")
     wh_url = input("Entrez votre URL de webhook Discord (ou laissez vide pour annuler): ").strip()
     if not wh_url:
-        print("[!] Annulé.")
+        print("Annulé.")
         return
         
     config = load_config()
     config["webhook_url"] = wh_url
     save_config(config)
-    print("[✓] Webhook Discord sauvegardé avec succès dans config.json !")
+    print("Webhook Discord sauvegardé avec succès dans config.json !")
 
 def mode_check_payment_method():
-    print("\n--- Vérification des cartes de paiement ---")
+    print("\nVérification des cartes de paiement")
     
     config = load_config()
     has_token = bool(config.get("access_token") and len(config.get("access_token")) > 10)

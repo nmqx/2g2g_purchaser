@@ -1,5 +1,3 @@
-# auth.py
-
 import json
 from getfirstdd import get_dd_cookie
 
