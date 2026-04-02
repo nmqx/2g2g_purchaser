@@ -62,6 +62,53 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
             """
             self.wfile.write(html.encode("utf-8"))
             
+        elif parsed_path.path == '/calendar':
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.end_headers()
+            try:
+                with open('calendar_frontend.js', 'r', encoding='utf-8') as f:
+                    cal_code = f.read()
+            except FileNotFoundError:
+                self.wfile.write(b"calendar_frontend.js not found")
+                return
+                
+            html = f"""<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <title>TGTG Calendar Setup</title>
+                <script src="https://cdn.tailwindcss.com"></script>
+                <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+                <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+                <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+            </head>
+            <body>
+                <div id="root"></div>
+                <script type="text/babel">
+{cal_code}
+                </script>
+            </body>
+            </html>"""
+            self.wfile.write(html.encode("utf-8"))
+            
+        elif parsed_path.path == '/api/get_calendar':
+            import os
+            query = dict(urllib.parse.parse_qsl(parsed_path.query))
+            t = query.get('type', 'usual')
+            
+            config = {}
+            if os.path.exists("config.json"):
+                with open("config.json", "r") as f:
+                    config = json.load(f)
+                    
+            schedule = config.get(f"calendar_{t}", {})
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({"schedule": schedule}).encode('utf-8'))
+            
         elif parsed_path.path == '/api/tgtg':
             tgtg_url = f"https://www.toogoodtogo.com/api/surprise-bags/item-list?{parsed_path.query}"
             
@@ -89,7 +136,34 @@ class RequestHandler(http.server.SimpleHTTPRequestHandler):
            
             super().do_GET()
 
-def start_dashboard(lat, lng, port=3001):
+    def do_POST(self):
+        parsed_path = urllib.parse.urlparse(self.path)
+        if parsed_path.path == '/api/save_calendar':
+            import os
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            config = {}
+            if os.path.exists("config.json"):
+                with open("config.json", "r") as f:
+                    config = json.load(f)
+                    
+            t = data.get("type", "usual")
+            config[f"calendar_{t}"] = data.get("schedule", {})
+            
+            with open("config.json", "w") as f:
+                json.dump(config, f, indent=4)
+                
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(b'{"status": "ok"}')
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+def start_dashboard(lat, lng, port=3001, open_browser=True):
     global global_lat, global_lng, PORT
     global_lat = lat
     global_lng = lng
@@ -102,8 +176,8 @@ def start_dashboard(lat, lng, port=3001):
         httpd = socketserver.TCPServer(("", PORT), handler)
         print(f"Backend started at http://localhost:{PORT}")
         
-
-        threading.Timer(1.0, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
+        if open_browser:
+            threading.Timer(1.0, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
         
         print(f"Ctrl+C to stop.")
         httpd.serve_forever()
