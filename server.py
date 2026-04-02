@@ -127,7 +127,23 @@ def get_coordinates():
     try:
         data = getcoord.json()
         coordinates = data["features"][0]["geometry"]["coordinates"]
-        return coordinates[1], coordinates[0] # latitude, longitude
+        lat, lng = coordinates[1], coordinates[0]
+        
+        # Save to config.json
+        try:
+            import json, os
+            config = {}
+            if os.path.exists("config.json"):
+                with open("config.json", "r") as f:
+                    config = json.load(f)
+            config["latitude"] = lat
+            config["longitude"] = lng
+            with open("config.json", "w") as f:
+                json.dump(config, f, indent=4)
+        except Exception:
+            pass
+            
+        return lat, lng
     except Exception as e:
         print(f"Erreur lors de la recherche des coordonnées : {e}")
         print("Utilisation des coordonnées par défaut (Nantes)...")
