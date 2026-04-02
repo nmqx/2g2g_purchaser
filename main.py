@@ -44,6 +44,32 @@ def mode_finder():
 def mode_autobuy():
     print("\nMode Autobuy: Coming soon...")
 
+def mode_setup_calendar():
+    print("\n--- Configuration du Calendrier ---")
+    print("Quel calendrier souhaitez-vous définir et configurer ?")
+    print(" 1. Calendrier Classique (Règles récurrentes chaque semaine)")
+    print(" 2. Calendrier Spécial (Spécifique aux 7 prochains jours)")
+    c = input("Choix (1-2) : ").strip()
+    
+    cal_type = "usual" if c == '1' else "special"
+    
+    import urllib.request
+    try:
+        urllib.request.urlopen("http://localhost:3001/")
+    except Exception:
+        import server
+        import threading
+        conf = load_config()
+        lat, lng = conf.get("latitude", 47.1), conf.get("longitude", -1.5)
+        print("[+] Démarrage du serveur web local...")
+        threading.Thread(target=server.start_dashboard, args=(lat, lng, 3001, False), daemon=True).start()
+        time.sleep(1)
+        
+    import webbrowser
+    print(f"\n[+] Ouverture du Calendrier {cal_type.upper()} dans votre navigateur...")
+    webbrowser.open(f"http://localhost:3001/calendar?type={cal_type}")
+    print("\n[✓] Éditeur de calendrier lancé ! Configurez vos dates dans le navigateur.\n")
+
 def mode_notification():
     print("\n--- Mode Notification (Scraper) ---")
     
@@ -171,10 +197,11 @@ def settings_menu():
         print(" 1. Webhook Setup")
         print(" 2. Location Setup (Set Address)")
         print(" 3. Check Payment Methods")
-        print(" 4. Retour au Menu Principal")
+        print(" 4. Schedule Setup (Calendars)")
+        print(" 5. Retour au Menu Principal")
         print("-"*35)
         
-        choix = input("\nChoisissez une option (1-4): ").strip()
+        choix = input("\nChoisissez une option (1-5): ").strip()
         
         if choix == '1':
             mode_set_webhook()
@@ -183,6 +210,8 @@ def settings_menu():
         elif choix == '3':
             mode_check_payment_method()
         elif choix == '4':
+            mode_setup_calendar()
+        elif choix == '5':
             break
         else:
             print("Invalid choice.")
