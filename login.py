@@ -108,6 +108,14 @@ try:
                 print("\nLogged in")
                 print(f"Access Token: {final_data['access_token'][:30]}...")
                 print(f"Refresh Token: {final_data['refresh_token'][:30]}...")
+                config_data = {
+                    "access_token": final_data["access_token"],
+                    "refresh_token": final_data["refresh_token"],
+                }
+                with open('config.json', 'w') as f:
+                    json.dump(config_data, f, indent=4)
+                    
+                print("Tokens saved to config.json")
             else:
                 print("\nError uknown: Server response:")
                 print(final_data)
